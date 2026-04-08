@@ -5,18 +5,12 @@ import { useCreateQuestion, useListSubjects } from "@workspace/api-client-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ChevronLeft, Loader2, CheckCircle, AlertCircle, FileText } from "lucide-react";
 
 const GRADES = ["6", "7", "8", "9", "10", "11", "12"];
-const QUESTION_TYPES = [
-  { value: "model", label: "Model Exam" },
-  { value: "test", label: "Unit Test" },
-  { value: "quiz", label: "Quiz" },
-  { value: "practice", label: "Practice" },
-  { value: "other", label: "Other" },
-];
 
 interface ParsedQuestion {
   text: string;
@@ -197,12 +191,11 @@ Explanation: 7 × 8 = 56.`}
 
             <div className="space-y-1.5">
               <Label>Question Type <span className="text-muted-foreground font-normal">(optional — applies to all questions in this batch)</span></Label>
-              <Select value={questionType} onValueChange={setQuestionType}>
-                <SelectTrigger><SelectValue placeholder="Select type — e.g. Model Exam, Unit Test..." /></SelectTrigger>
-                <SelectContent>
-                  {QUESTION_TYPES.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}
-                </SelectContent>
-              </Select>
+              <Input
+                placeholder="e.g. Model Exam, Unit Test, Chapter 3 Quiz..."
+                value={questionType}
+                onChange={(e) => setQuestionType(e.target.value)}
+              />
             </div>
 
             <div className="space-y-1.5">

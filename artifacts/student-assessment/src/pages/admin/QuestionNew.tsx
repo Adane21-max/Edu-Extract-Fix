@@ -11,13 +11,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ChevronLeft, Loader2, CheckCircle } from "lucide-react";
 
 const GRADES = ["6", "7", "8", "9", "10", "11", "12"];
-const QUESTION_TYPES = [
-  { value: "model", label: "Model Exam" },
-  { value: "test", label: "Unit Test" },
-  { value: "quiz", label: "Quiz" },
-  { value: "practice", label: "Practice" },
-  { value: "other", label: "Other" },
-];
 
 export default function AdminQuestionNew() {
   const [, setLocation] = useLocation();
@@ -111,12 +104,11 @@ export default function AdminQuestionNew() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <Label>Question Type</Label>
-                  <Select value={questionType} onValueChange={setQuestionType}>
-                    <SelectTrigger><SelectValue placeholder="Select type (optional)" /></SelectTrigger>
-                    <SelectContent>
-                      {QUESTION_TYPES.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
+                  <Input
+                    placeholder="e.g. Model Exam, Unit Test..."
+                    value={questionType}
+                    onChange={(e) => setQuestionType(e.target.value)}
+                  />
                 </div>
                 <div className="space-y-1.5">
                   <Label>Difficulty</Label>

@@ -10,6 +10,7 @@ export const quizSessionsTable = pgTable("quiz_sessions", {
   studentId: integer("student_id").notNull().references(() => studentsTable.id, { onDelete: "cascade" }),
   subjectId: integer("subject_id").notNull().references(() => subjectsTable.id),
   grade: text("grade").notNull(),
+  questionType: text("question_type"),
   status: text("status", { enum: ["in_progress", "completed"] }).notNull().default("in_progress"),
   score: integer("score"),
   totalQuestions: integer("total_questions").notNull().default(0),

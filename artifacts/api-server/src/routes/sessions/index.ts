@@ -3,7 +3,6 @@ import { eq, and, inArray } from "drizzle-orm";
 import { db, quizSessionsTable, sessionAnswersTable, questionsTable, subjectsTable } from "@workspace/db";
 import {
   ListSessionsQueryParams,
-  CreateSessionBody,
   GetSessionParams,
   SubmitSessionParams,
   SubmitSessionBody,
@@ -21,6 +20,7 @@ async function buildSessionDetail(sessionId: number, revealAnswers: boolean) {
       subjectName: subjectsTable.name,
       subjectTimerMinutes: subjectsTable.timerMinutes,
       grade: quizSessionsTable.grade,
+      questionType: quizSessionsTable.questionType,
       status: quizSessionsTable.status,
       score: quizSessionsTable.score,
       totalQuestions: quizSessionsTable.totalQuestions,
@@ -75,6 +75,7 @@ async function buildSessionDetail(sessionId: number, revealAnswers: boolean) {
       ...session,
       subjectName: session.subjectName ?? null,
       subjectTimerMinutes: session.subjectTimerMinutes ?? null,
+      questionType: session.questionType ?? null,
       score: session.score ?? null,
       correctAnswers: session.correctAnswers ?? null,
       timeTaken: session.timeTaken ?? null,
@@ -98,6 +99,7 @@ router.get("/sessions", async (req, res): Promise<void> => {
       subjectId: quizSessionsTable.subjectId,
       subjectName: subjectsTable.name,
       grade: quizSessionsTable.grade,
+      questionType: quizSessionsTable.questionType,
       status: quizSessionsTable.status,
       score: quizSessionsTable.score,
       totalQuestions: quizSessionsTable.totalQuestions,
@@ -114,6 +116,7 @@ router.get("/sessions", async (req, res): Promise<void> => {
   const result = sessions.map((s) => ({
     ...s,
     subjectName: s.subjectName ?? null,
+    questionType: s.questionType ?? null,
     score: s.score ?? null,
     correctAnswers: s.correctAnswers ?? null,
     timeTaken: s.timeTaken ?? null,
@@ -124,36 +127,83 @@ router.get("/sessions", async (req, res): Promise<void> => {
 });
 
 router.post("/sessions", async (req, res): Promise<void> => {
-  const parsed = CreateSessionBody.safeParse(req.body);
-  if (!parsed.success) {
-    res.status(400).json({ error: parsed.error.message });
+  const body = req.body as {
+    studentId?: number;
+    subjectId?: number;
+    grade?: string;
+    questionType?: string | null;
+  };
+
+  const { studentId, subjectId, grade, questionType } = body;
+
+  if (!studentId || !subjectId || !grade) {
+    res.status(400).json({ error: "studentId, subjectId, and grade are required" });
     return;
   }
 
-  const { studentId, subjectId, grade, questionCount = 10 } = parsed.data;
+  const rawType = questionType ?? null;
+
+  // Check if this student already has a completed session for this subject+questionType
+  const existingSessions = await db
+    .select({ id: quizSessionsTable.id, status: quizSessionsTable.status })
+    .from(quizSessionsTable)
+    .where(
+      and(
+        eq(quizSessionsTable.studentId, studentId),
+        eq(quizSessionsTable.subjectId, subjectId),
+        rawType != null
+          ? eq(quizSessionsTable.questionType, rawType)
+          : eq(quizSessionsTable.grade, grade)
+      )
+    );
+
+  const completedSession = existingSessions.find(s => s.status === "completed");
+  if (completedSession) {
+    res.status(409).json({
+      error: "You have already completed this question set. Review your results instead.",
+      sessionId: completedSession.id,
+    });
+    return;
+  }
+
+  // Resume an in-progress session if it exists
+  const inProgressSession = existingSessions.find(s => s.status === "in_progress");
+  if (inProgressSession) {
+    const detail = await buildSessionDetail(inProgressSession.id, false);
+    res.status(200).json({ ...detail, feedback: null });
+    return;
+  }
+
+  // Load all questions of the specified type for this subject+grade
+  const conditions = [
+    eq(questionsTable.subjectId, subjectId),
+    eq(questionsTable.grade, grade),
+  ];
+  if (rawType != null) {
+    conditions.push(eq(questionsTable.questionType, rawType));
+  }
 
   const allQuestions = await db
     .select()
     .from(questionsTable)
-    .where(and(eq(questionsTable.subjectId, subjectId), eq(questionsTable.grade, grade)));
+    .where(and(...conditions));
 
   if (allQuestions.length === 0) {
-    res.status(400).json({ error: "No questions available for this subject/grade combination" });
+    res.status(400).json({ error: "No questions available for this question type" });
     return;
   }
-
-  const shuffled = allQuestions.sort(() => Math.random() - 0.5).slice(0, questionCount);
 
   const [session] = await db.insert(quizSessionsTable).values({
     studentId,
     subjectId,
     grade,
+    questionType: rawType,
     status: "in_progress",
-    totalQuestions: shuffled.length,
+    totalQuestions: allQuestions.length,
   }).returning();
 
   await db.insert(sessionAnswersTable).values(
-    shuffled.map((q, idx) => ({
+    allQuestions.map((q, idx) => ({
       sessionId: session.id,
       questionId: q.id,
       orderIndex: idx,

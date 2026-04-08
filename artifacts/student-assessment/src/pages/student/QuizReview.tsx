@@ -5,7 +5,7 @@ import { useGetSession, useGetFeedback, useGenerateFeedback } from "@workspace/a
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, CheckCircle, XCircle, ChevronLeft, Brain, Trophy, Target, Lightbulb, AlertCircle } from "lucide-react";
+import { Loader2, CheckCircle, XCircle, ChevronLeft, Brain, Trophy, Target, Lightbulb } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const OPTIONS = ["A", "B", "C", "D"] as const;
@@ -14,11 +14,10 @@ export default function QuizReview() {
   const { sessionId } = useParams<{ sessionId: string }>();
   const [, setLocation] = useLocation();
   const id = parseInt(sessionId ?? "0");
-  const [showAllAnswers, setShowAllAnswers] = useState(false);
   const [generating, setGenerating] = useState(false);
 
   const { data, isLoading } = useGetSession(id, { query: { enabled: !!id } });
-  const { data: feedback, refetch: refetchFeedback, isLoading: feedbackLoading } = useGetFeedback(id, {
+  const { data: feedback, refetch: refetchFeedback } = useGetFeedback(id, {
     query: { enabled: !!id, retry: false }
   });
 
@@ -46,6 +45,7 @@ export default function QuizReview() {
   const correct = session.correctAnswers ?? 0;
   const total = session.totalQuestions;
   const percent = score;
+  const questionTypeName = (session as { questionType?: string | null }).questionType ?? null;
 
   const scoreColor = percent >= 70 ? "text-green-600" : percent >= 50 ? "text-yellow-600" : "text-red-600";
 
@@ -60,12 +60,16 @@ export default function QuizReview() {
     <StudentLayout>
       <div className="max-w-2xl mx-auto space-y-6">
         <div className="flex items-center gap-3">
-          <Button variant="ghost" size="sm" onClick={() => setLocation("/student/dashboard")}>
+          <Button variant="ghost" size="sm" onClick={() => setLocation("/student/quiz/start")}>
             <ChevronLeft className="w-4 h-4 mr-1" /> Back
           </Button>
           <div>
             <h1 className="text-xl font-bold">Quiz Review</h1>
-            <p className="text-sm text-muted-foreground">{session.subjectName} · Grade {session.grade}</p>
+            <p className="text-sm text-muted-foreground">
+              {session.subjectName}
+              {questionTypeName ? ` · ${questionTypeName}` : ""}
+              {" · "}Grade {session.grade}
+            </p>
           </div>
         </div>
 
@@ -98,95 +102,97 @@ export default function QuizReview() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {feedbackLoading ? (
-              <div className="flex items-center justify-center py-4">
-                <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
-              </div>
-            ) : feedback ? (
-              <div className="space-y-4 text-sm">
-                {feedback.summary && (
-                  <p className="text-foreground leading-relaxed">{feedback.summary}</p>
-                )}
+            {feedback ? (
+              <div className="space-y-3 text-sm">
                 {feedback.strengths && (
-                  <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-                    <div className="font-semibold text-green-800 flex items-center gap-1.5 mb-1">
+                  <div>
+                    <div className="font-semibold text-green-700 mb-1 flex items-center gap-1.5">
                       <CheckCircle className="w-4 h-4" /> Strengths
                     </div>
-                    <p className="text-green-700">{feedback.strengths}</p>
+                    <p className="text-muted-foreground">{feedback.strengths}</p>
                   </div>
                 )}
                 {feedback.weaknesses && (
-                  <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-                    <div className="font-semibold text-red-800 flex items-center gap-1.5 mb-1">
-                      <AlertCircle className="w-4 h-4" /> Areas to Improve
+                  <div>
+                    <div className="font-semibold text-red-600 mb-1 flex items-center gap-1.5">
+                      <XCircle className="w-4 h-4" /> Areas to Improve
                     </div>
-                    <p className="text-red-700">{feedback.weaknesses}</p>
+                    <p className="text-muted-foreground">{feedback.weaknesses}</p>
                   </div>
                 )}
-                {feedback.recommendations && (
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                    <div className="font-semibold text-blue-800 flex items-center gap-1.5 mb-1">
-                      <Lightbulb className="w-4 h-4" /> Recommendations
+                {feedback.tips && (
+                  <div>
+                    <div className="font-semibold text-blue-600 mb-1 flex items-center gap-1.5">
+                      <Lightbulb className="w-4 h-4" /> Study Tips
                     </div>
-                    <p className="text-blue-700">{feedback.recommendations}</p>
+                    <p className="text-muted-foreground">{feedback.tips}</p>
                   </div>
                 )}
-                <Button variant="outline" size="sm" onClick={() => genFeedback({ sessionId: id })} disabled={generating}>
-                  {generating ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Regenerating...</> : "Regenerate Feedback"}
-                </Button>
               </div>
             ) : (
-              <div className="text-center py-2">
-                <p className="text-muted-foreground text-sm mb-3">Get personalized AI feedback on your performance.</p>
-                <Button onClick={() => genFeedback({ sessionId: id })} disabled={generating}>
-                  {generating ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Generating...</> : <><Brain className="w-4 h-4 mr-2" /> Generate AI Feedback</>}
+              <div className="text-center py-4">
+                <p className="text-sm text-muted-foreground mb-3">
+                  Get personalized AI feedback on your performance
+                </p>
+                <Button
+                  size="sm"
+                  onClick={() => genFeedback({ id })}
+                  disabled={generating}
+                >
+                  {generating ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Generating...</> : <><Brain className="w-4 h-4 mr-2" /> Generate Feedback</>}
                 </Button>
               </div>
             )}
           </CardContent>
         </Card>
 
-        {/* Question review */}
-        <div className="flex items-center justify-between">
-          <h2 className="font-semibold text-lg">Question Review</h2>
-          <Button variant="outline" size="sm" onClick={() => setShowAllAnswers(!showAllAnswers)}>
-            {showAllAnswers ? "Hide" : "Show"} All Answers
-          </Button>
-        </div>
-
+        {/* All questions with answers and explanations always shown */}
         <div className="space-y-4">
+          <h2 className="font-semibold text-base">All Questions & Answers</h2>
           {questions.map((q, idx) => {
             const isCorrect = q.isCorrect;
-            const optLabels = { A: q.optionA, B: q.optionB, C: q.optionC, D: q.optionD };
+            const optLabels: Record<string, string> = {
+              A: q.optionA,
+              B: q.optionB,
+              C: q.optionC,
+              D: q.optionD,
+            };
 
             return (
-              <Card key={q.id} className={cn("border-l-4", isCorrect ? "border-l-green-500" : isCorrect === false ? "border-l-red-500" : "border-l-muted")}>
-                <CardContent className="pt-4">
-                  <div className="flex items-start justify-between gap-2 mb-3">
-                    <p className="text-sm font-medium leading-relaxed flex-1">
-                      <span className="text-muted-foreground mr-2">Q{idx + 1}.</span>
-                      {q.questionText}
-                    </p>
-                    {isCorrect !== null && (
-                      isCorrect
-                        ? <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0" />
-                        : <XCircle className="w-5 h-5 text-red-500 flex-shrink-0" />
+              <Card key={q.id} className={cn("border", isCorrect ? "border-green-200" : "border-red-200")}>
+                <CardContent className="pt-4 pb-4">
+                  <div className="flex items-start gap-2 mb-3">
+                    {isCorrect ? (
+                      <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
+                    ) : (
+                      <XCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
                     )}
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-xs font-medium text-muted-foreground">Q{idx + 1}</span>
+                        <Badge variant={isCorrect ? "default" : "destructive"} className="text-xs py-0">
+                          {isCorrect ? "Correct" : "Wrong"}
+                        </Badge>
+                      </div>
+                      <p className="text-sm font-medium">{q.questionText}</p>
+                    </div>
                   </div>
 
                   <div className="space-y-2">
                     {OPTIONS.map((opt) => {
                       const isSelected = q.selectedOption === opt;
-                      const isAns = (showAllAnswers || q.selectedOption != null) && q.correctOption === opt;
+                      const isAns = q.correctOption === opt;
                       const text = optLabels[opt];
                       return (
                         <div
                           key={opt}
                           className={cn(
                             "flex items-start gap-2 text-sm px-3 py-2 rounded-lg",
-                            isAns ? "bg-green-100 border border-green-300 text-green-800" :
-                            isSelected && !isCorrect ? "bg-red-100 border border-red-300 text-red-800" :
-                            "bg-muted/50 text-muted-foreground"
+                            isAns
+                              ? "bg-green-100 border border-green-300 text-green-800"
+                              : isSelected && !isCorrect
+                              ? "bg-red-100 border border-red-300 text-red-800"
+                              : "bg-muted/50 text-muted-foreground"
                           )}
                         >
                           <span className="font-bold w-4 flex-shrink-0">{opt}.</span>
@@ -198,7 +204,7 @@ export default function QuizReview() {
                     })}
                   </div>
 
-                  {(showAllAnswers || q.selectedOption != null) && q.explanation && (
+                  {q.explanation && (
                     <div className="mt-3 bg-blue-50 border border-blue-200 rounded-lg px-3 py-2 text-xs text-blue-800">
                       <span className="font-semibold">Explanation:</span> {q.explanation}
                     </div>
@@ -209,12 +215,12 @@ export default function QuizReview() {
           })}
         </div>
 
-        <div className="flex gap-3">
+        <div className="flex gap-3 pb-4">
           <Button onClick={() => setLocation("/student/dashboard")} variant="outline" className="flex-1">
             Back to Dashboard
           </Button>
           <Button onClick={() => setLocation("/student/quiz/start")} className="flex-1">
-            Take Another Quiz
+            More Quizzes
           </Button>
         </div>
       </div>

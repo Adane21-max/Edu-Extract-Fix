@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { eq, and } from "drizzle-orm";
+import { eq, and, sql } from "drizzle-orm";
 import { db, questionsTable, subjectsTable } from "@workspace/db";
 import {
   ListQuestionsQueryParams,
@@ -49,6 +49,33 @@ router.get("/questions", async (req, res): Promise<void> => {
     : await baseQuery.limit(limit ?? 100);
 
   res.json(rows.map(r => ({ ...r, subjectName: r.subjectName ?? null, questionType: r.questionType ?? null })));
+});
+
+router.get("/questions/types", async (req, res): Promise<void> => {
+  const subjectId = req.query.subjectId ? parseInt(String(req.query.subjectId)) : null;
+  const grade = req.query.grade ? String(req.query.grade) : null;
+
+  if (!subjectId || !grade) {
+    res.status(400).json({ error: "subjectId and grade are required" });
+    return;
+  }
+
+  const rows = await db
+    .select({
+      questionType: questionsTable.questionType,
+      count: sql<number>`count(*)::int`,
+    })
+    .from(questionsTable)
+    .where(and(eq(questionsTable.subjectId, subjectId), eq(questionsTable.grade, grade)))
+    .groupBy(questionsTable.questionType);
+
+  const types = rows.map(r => ({
+    questionType: r.questionType ?? "General",
+    rawType: r.questionType,
+    count: Number(r.count),
+  }));
+
+  res.json(types);
 });
 
 router.post("/questions", async (req, res): Promise<void> => {
