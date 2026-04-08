@@ -347,6 +347,7 @@ export const ListSessionsResponseItem = zod.object({
   subjectId: zod.number(),
   subjectName: zod.string().nullable(),
   grade: zod.string(),
+  questionType: zod.string().nullable(),
   status: zod.enum(["in_progress", "completed"]),
   score: zod.number().nullable(),
   totalQuestions: zod.number(),

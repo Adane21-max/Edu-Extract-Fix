@@ -16,6 +16,7 @@ export const questionsTable = pgTable("questions", {
   explanation: text("explanation").notNull(),
   difficulty: text("difficulty", { enum: ["easy", "medium", "hard"] }).notNull().default("medium"),
   questionType: text("question_type"),
+  timerMinutes: integer("timer_minutes"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });

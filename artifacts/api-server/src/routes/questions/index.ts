@@ -85,7 +85,7 @@ router.post("/questions", async (req, res): Promise<void> => {
     return;
   }
 
-  const bodyRaw = req.body as { questionType?: string };
+  const bodyRaw = req.body as { questionType?: string; timerMinutes?: number | null };
 
   const [question] = await db.insert(questionsTable).values({
     subjectId: parsed.data.subjectId,
@@ -99,6 +99,7 @@ router.post("/questions", async (req, res): Promise<void> => {
     explanation: parsed.data.explanation,
     difficulty: parsed.data.difficulty ?? "medium",
     questionType: bodyRaw.questionType ?? null,
+    timerMinutes: bodyRaw.timerMinutes ? Number(bodyRaw.timerMinutes) : null,
   }).returning();
 
   const [subject] = await db.select().from(subjectsTable).where(eq(subjectsTable.id, question.subjectId));

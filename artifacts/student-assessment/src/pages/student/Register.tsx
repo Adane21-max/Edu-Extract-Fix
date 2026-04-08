@@ -122,7 +122,8 @@ export default function StudentRegister() {
                 <Input id="telebirr" placeholder="e.g. TBR-2024-XXXXXX" value={telebirr}
                   onChange={(e) => setTelebirr(e.target.value)} />
                 <p className="text-xs text-muted-foreground">
-                  Enter your TeleBirr payment receipt for faster approval.
+                  Pay <span className="font-semibold text-foreground">1000 birr</span> via Telebirr{" "}
+                  <span className="font-semibold text-foreground">0936592186 Adane F</span> and enter your TeleBirr payment receipt number here for faster approval.
                 </p>
               </div>
 

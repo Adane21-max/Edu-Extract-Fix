@@ -46,6 +46,7 @@ async function buildSessionDetail(sessionId: number, revealAnswers: boolean) {
       optionD: questionsTable.optionD,
       correctOption: questionsTable.correctOption,
       explanation: questionsTable.explanation,
+      timerMinutes: questionsTable.timerMinutes,
       selectedOption: sessionAnswersTable.selectedOption,
       isCorrect: sessionAnswersTable.isCorrect,
       orderIndex: sessionAnswersTable.orderIndex,
@@ -54,6 +55,10 @@ async function buildSessionDetail(sessionId: number, revealAnswers: boolean) {
     .leftJoin(questionsTable, eq(sessionAnswersTable.questionId, questionsTable.id))
     .where(eq(sessionAnswersTable.sessionId, sessionId))
     .orderBy(sessionAnswersTable.orderIndex);
+
+  // Use question-type timer if set, otherwise fall back to subject timer
+  const questionTypeTimerMinutes = answers.find(a => a.timerMinutes != null)?.timerMinutes ?? null;
+  const effectiveTimerMinutes = questionTypeTimerMinutes ?? session.subjectTimerMinutes ?? null;
 
   const questions = answers.map((a) => ({
     id: a.id,
@@ -74,7 +79,7 @@ async function buildSessionDetail(sessionId: number, revealAnswers: boolean) {
     session: {
       ...session,
       subjectName: session.subjectName ?? null,
-      subjectTimerMinutes: session.subjectTimerMinutes ?? null,
+      subjectTimerMinutes: effectiveTimerMinutes,
       questionType: session.questionType ?? null,
       score: session.score ?? null,
       correctAnswers: session.correctAnswers ?? null,
@@ -221,7 +226,15 @@ router.get("/sessions/:id", async (req, res): Promise<void> => {
     return;
   }
 
-  const detail = await buildSessionDetail(params.data.id, false);
+  // Reveal answers if the session is completed
+  const [sessionCheck] = await db
+    .select({ status: quizSessionsTable.status })
+    .from(quizSessionsTable)
+    .where(eq(quizSessionsTable.id, params.data.id));
+
+  const revealAnswers = sessionCheck?.status === "completed";
+  const detail = await buildSessionDetail(params.data.id, revealAnswers);
+
   if (!detail) {
     res.status(404).json({ error: "Session not found" });
     return;

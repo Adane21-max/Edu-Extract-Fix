@@ -78,6 +78,7 @@ export default function AdminQuestionBulk() {
   const [grade, setGrade] = useState("");
   const [subjectId, setSubjectId] = useState("");
   const [questionType, setQuestionType] = useState("");
+  const [timerMinutes, setTimerMinutes] = useState("");
   const [raw, setRaw] = useState("");
   const [parsed, setParsed] = useState<ParsedQuestion[] | null>(null);
   const [done, setDone] = useState(0);
@@ -99,7 +100,7 @@ export default function AdminQuestionBulk() {
     let d = 0; let f = 0;
     for (const q of parsed) {
       try {
-        await mutateAsync({ data: { ...q, subjectId: parseInt(subjectId), grade, difficulty: "medium", questionType: questionType || undefined } as Parameters<typeof mutateAsync>[0]["data"] });
+        await mutateAsync({ data: { ...q, subjectId: parseInt(subjectId), grade, difficulty: "medium", questionType: questionType || undefined, timerMinutes: timerMinutes ? parseInt(timerMinutes) : undefined } as Parameters<typeof mutateAsync>[0]["data"] });
         d++;
       } catch { f++; }
     }
@@ -189,13 +190,26 @@ Explanation: 7 × 8 = 56.`}
               </div>
             </div>
 
-            <div className="space-y-1.5">
-              <Label>Question Type <span className="text-muted-foreground font-normal">(optional — applies to all questions in this batch)</span></Label>
-              <Input
-                placeholder="e.g. Model Exam, Unit Test, Chapter 3 Quiz..."
-                value={questionType}
-                onChange={(e) => setQuestionType(e.target.value)}
-              />
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label>Question Type <span className="text-muted-foreground font-normal">(optional)</span></Label>
+                <Input
+                  placeholder="e.g. Model Exam, Unit Test..."
+                  value={questionType}
+                  onChange={(e) => setQuestionType(e.target.value)}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Timer (minutes) <span className="text-muted-foreground font-normal">(optional)</span></Label>
+                <Input
+                  type="number"
+                  min={1}
+                  max={180}
+                  placeholder="e.g. 60"
+                  value={timerMinutes}
+                  onChange={(e) => setTimerMinutes(e.target.value)}
+                />
+              </div>
             </div>
 
             <div className="space-y-1.5">

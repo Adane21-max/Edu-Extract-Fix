@@ -27,6 +27,7 @@ export default function AdminQuestionNew() {
   const [explanation, setExplanation] = useState("");
   const [difficulty, setDifficulty] = useState<"easy" | "medium" | "hard">("medium");
   const [questionType, setQuestionType] = useState("");
+  const [timerMinutes, setTimerMinutes] = useState("");
   const [success, setSuccess] = useState(false);
 
   const filteredSubjects = grade ? subjects?.filter(s => s.grade === grade) : subjects ?? [];
@@ -35,7 +36,7 @@ export default function AdminQuestionNew() {
     mutation: {
       onSuccess() {
         setSuccess(true);
-        setText(""); setOptA(""); setOptB(""); setOptC(""); setOptD(""); setCorrect(""); setExplanation(""); setQuestionType("");
+        setText(""); setOptA(""); setOptB(""); setOptC(""); setOptD(""); setCorrect(""); setExplanation(""); setQuestionType(""); setTimerMinutes("");
         setTimeout(() => setSuccess(false), 3000);
       },
     },
@@ -57,6 +58,7 @@ export default function AdminQuestionNew() {
         explanation,
         difficulty,
         questionType: questionType || undefined,
+        timerMinutes: timerMinutes ? parseInt(timerMinutes) : undefined,
       } as Parameters<typeof createQ>[0]["data"],
     });
   };
@@ -111,6 +113,20 @@ export default function AdminQuestionNew() {
                   />
                 </div>
                 <div className="space-y-1.5">
+                  <Label>Timer (minutes) <span className="text-muted-foreground font-normal">optional</span></Label>
+                  <Input
+                    type="number"
+                    min={1}
+                    max={180}
+                    placeholder="e.g. 60"
+                    value={timerMinutes}
+                    onChange={(e) => setTimerMinutes(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1.5 col-span-2">
                   <Label>Difficulty</Label>
                   <Select value={difficulty} onValueChange={(v) => setDifficulty(v as "easy" | "medium" | "hard")}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
