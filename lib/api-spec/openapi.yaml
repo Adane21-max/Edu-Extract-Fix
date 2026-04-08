@@ -3,20 +3,34 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: Ada21Tech AI-Powered Student Assessment Platform API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: students
+    description: Student management
+  - name: admins
+    description: Admin management
+  - name: subjects
+    description: Subject and grade management
+  - name: questions
+    description: Question bank management
+  - name: sessions
+    description: Quiz sessions and scoring
+  - name: feedback
+    description: AI-generated feedback
+  - name: dashboard
+    description: Dashboard aggregates
+
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,6 +38,481 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /students/register:
+    post:
+      operationId: registerStudent
+      tags: [students]
+      summary: Register a new student
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterStudentBody"
+      responses:
+        "201":
+          description: Student registered
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Student"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: Conflict - email already exists
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /students/login:
+    post:
+      operationId: loginStudent
+      tags: [students]
+      summary: Student login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginBody"
+      responses:
+        "200":
+          description: Logged in
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /students/me:
+    get:
+      operationId: getMyProfile
+      tags: [students]
+      summary: Get current student profile
+      parameters:
+        - in: query
+          name: studentId
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Student profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Student"
+
+  /students:
+    get:
+      operationId: listStudents
+      tags: [students]
+      summary: List all students (admin only)
+      responses:
+        "200":
+          description: List of students
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Student"
+
+  /students/{id}:
+    get:
+      operationId: getStudent
+      tags: [students]
+      summary: Get a single student by ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Student
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Student"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    patch:
+      operationId: updateStudent
+      tags: [students]
+      summary: Update student (admin can approve/change tier)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateStudentBody"
+      responses:
+        "200":
+          description: Updated student
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Student"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /admins/login:
+    post:
+      operationId: loginAdmin
+      tags: [admins]
+      summary: Admin login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginBody"
+      responses:
+        "200":
+          description: Admin logged in
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminAuthResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /subjects:
+    get:
+      operationId: listSubjects
+      tags: [subjects]
+      summary: List all subjects
+      responses:
+        "200":
+          description: List of subjects
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SubjectWithCount"
+    post:
+      operationId: createSubject
+      tags: [subjects]
+      summary: Create a new subject
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateSubjectBody"
+      responses:
+        "201":
+          description: Subject created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SubjectWithCount"
+
+  /subjects/{id}:
+    delete:
+      operationId: deleteSubject
+      tags: [subjects]
+      summary: Delete a subject
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /questions:
+    get:
+      operationId: listQuestions
+      tags: [questions]
+      summary: List questions with optional filters
+      parameters:
+        - in: query
+          name: subjectId
+          schema:
+            type: integer
+        - in: query
+          name: grade
+          schema:
+            type: string
+        - in: query
+          name: limit
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of questions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Question"
+    post:
+      operationId: createQuestion
+      tags: [questions]
+      summary: Create a new question
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateQuestionBody"
+      responses:
+        "201":
+          description: Question created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Question"
+
+  /questions/{id}:
+    get:
+      operationId: getQuestion
+      tags: [questions]
+      summary: Get a question by ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Question
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Question"
+    patch:
+      operationId: updateQuestion
+      tags: [questions]
+      summary: Update a question
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateQuestionBody"
+      responses:
+        "200":
+          description: Updated question
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Question"
+    delete:
+      operationId: deleteQuestion
+      tags: [questions]
+      summary: Delete a question
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /sessions:
+    get:
+      operationId: listSessions
+      tags: [sessions]
+      summary: List quiz sessions for a student
+      parameters:
+        - in: query
+          name: studentId
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of sessions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/QuizSession"
+    post:
+      operationId: createSession
+      tags: [sessions]
+      summary: Create a new quiz session
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateSessionBody"
+      responses:
+        "201":
+          description: Session created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QuizSessionDetail"
+
+  /sessions/{id}:
+    get:
+      operationId: getSession
+      tags: [sessions]
+      summary: Get a quiz session
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Session detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QuizSessionDetail"
+
+  /sessions/{id}/submit:
+    post:
+      operationId: submitSession
+      tags: [sessions]
+      summary: Submit answers and score a session
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SubmitSessionBody"
+      responses:
+        "200":
+          description: Session scored and AI feedback queued
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QuizSessionDetail"
+
+  /feedback/{sessionId}:
+    get:
+      operationId: getFeedback
+      tags: [feedback]
+      summary: Get AI feedback for a session
+      parameters:
+        - in: path
+          name: sessionId
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: AI feedback
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AiFeedback"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /feedback/{sessionId}/generate:
+    post:
+      operationId: generateFeedback
+      tags: [feedback]
+      summary: Generate or regenerate AI feedback for a session
+      parameters:
+        - in: path
+          name: sessionId
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Generated feedback
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AiFeedback"
+
+  /dashboard/student/{studentId}:
+    get:
+      operationId: getStudentDashboard
+      tags: [dashboard]
+      summary: Get student performance dashboard
+      parameters:
+        - in: path
+          name: studentId
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Dashboard data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StudentDashboard"
+
+  /dashboard/admin:
+    get:
+      operationId: getAdminDashboard
+      tags: [dashboard]
+      summary: Get admin dashboard overview
+      responses:
+        "200":
+          description: Admin dashboard
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminDashboard"
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +523,513 @@ components:
       required:
         - status
 
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+      required:
+        - error
+
+    Student:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        email:
+          type: string
+        grade:
+          type: string
+        status:
+          type: string
+          enum: [pending, approved, suspended]
+        subscriptionTier:
+          type: string
+          enum: [none, grade6, grade7, grade8, grade9, grade10, grade11, grade12]
+        subscriptionPrice:
+          type: ["integer", "null"]
+        telebirrReceipt:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - name
+        - email
+        - grade
+        - status
+        - subscriptionTier
+        - subscriptionPrice
+        - telebirrReceipt
+        - createdAt
+
+    RegisterStudentBody:
+      type: object
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+        password:
+          type: string
+        grade:
+          type: string
+        telebirrReceipt:
+          type: ["string", "null"]
+      required:
+        - name
+        - email
+        - password
+        - grade
+
+    UpdateStudentBody:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [pending, approved, suspended]
+        subscriptionTier:
+          type: string
+          enum: [none, grade6, grade7, grade8, grade9, grade10, grade11, grade12]
+        subscriptionPrice:
+          type: ["integer", "null"]
+        grade:
+          type: ["string", "null"]
+        telebirrReceipt:
+          type: ["string", "null"]
+
+    LoginBody:
+      type: object
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+      required:
+        - email
+        - password
+
+    AuthResponse:
+      type: object
+      properties:
+        token:
+          type: string
+        role:
+          type: string
+          enum: [student]
+        user:
+          $ref: "#/components/schemas/Student"
+      required:
+        - token
+        - role
+        - user
+
+    AdminAuthResponse:
+      type: object
+      properties:
+        token:
+          type: string
+        role:
+          type: string
+          enum: [admin]
+      required:
+        - token
+        - role
+
+    SubjectWithCount:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        grade:
+          type: string
+        description:
+          type: ["string", "null"]
+        questionCount:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - name
+        - grade
+        - description
+        - questionCount
+        - createdAt
+
+    CreateSubjectBody:
+      type: object
+      properties:
+        name:
+          type: string
+        grade:
+          type: string
+        description:
+          type: ["string", "null"]
+      required:
+        - name
+        - grade
+
+    Question:
+      type: object
+      properties:
+        id:
+          type: integer
+        subjectId:
+          type: integer
+        subjectName:
+          type: ["string", "null"]
+        grade:
+          type: string
+        text:
+          type: string
+        optionA:
+          type: string
+        optionB:
+          type: string
+        optionC:
+          type: string
+        optionD:
+          type: string
+        correctOption:
+          type: string
+          enum: [A, B, C, D]
+        explanation:
+          type: string
+        difficulty:
+          type: string
+          enum: [easy, medium, hard]
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - subjectId
+        - subjectName
+        - grade
+        - text
+        - optionA
+        - optionB
+        - optionC
+        - optionD
+        - correctOption
+        - explanation
+        - difficulty
+        - createdAt
+
+    CreateQuestionBody:
+      type: object
+      properties:
+        subjectId:
+          type: integer
+        grade:
+          type: string
+        text:
+          type: string
+        optionA:
+          type: string
+        optionB:
+          type: string
+        optionC:
+          type: string
+        optionD:
+          type: string
+        correctOption:
+          type: string
+          enum: [A, B, C, D]
+        explanation:
+          type: string
+        difficulty:
+          type: string
+          enum: [easy, medium, hard]
+      required:
+        - subjectId
+        - grade
+        - text
+        - optionA
+        - optionB
+        - optionC
+        - optionD
+        - correctOption
+        - explanation
+
+    UpdateQuestionBody:
+      type: object
+      properties:
+        text:
+          type: string
+        optionA:
+          type: string
+        optionB:
+          type: string
+        optionC:
+          type: string
+        optionD:
+          type: string
+        correctOption:
+          type: string
+          enum: [A, B, C, D]
+        explanation:
+          type: string
+        difficulty:
+          type: string
+          enum: [easy, medium, hard]
+
+    CreateSessionBody:
+      type: object
+      properties:
+        studentId:
+          type: integer
+        subjectId:
+          type: integer
+        grade:
+          type: string
+        questionCount:
+          type: integer
+      required:
+        - studentId
+        - subjectId
+        - grade
+
+    SubmitSessionBody:
+      type: object
+      properties:
+        answers:
+          type: array
+          items:
+            $ref: "#/components/schemas/SubmitAnswerItem"
+        timeTaken:
+          type: ["integer", "null"]
+      required:
+        - answers
+
+    SubmitAnswerItem:
+      type: object
+      properties:
+        questionId:
+          type: integer
+        selectedOption:
+          type: string
+          enum: [A, B, C, D]
+      required:
+        - questionId
+        - selectedOption
+
+    SessionQuestion:
+      type: object
+      properties:
+        id:
+          type: integer
+        questionId:
+          type: integer
+        questionText:
+          type: string
+        optionA:
+          type: string
+        optionB:
+          type: string
+        optionC:
+          type: string
+        optionD:
+          type: string
+        correctOption:
+          type: ["string", "null"]
+        explanation:
+          type: ["string", "null"]
+        selectedOption:
+          type: ["string", "null"]
+        isCorrect:
+          type: ["boolean", "null"]
+        orderIndex:
+          type: integer
+      required:
+        - id
+        - questionId
+        - questionText
+        - optionA
+        - optionB
+        - optionC
+        - optionD
+        - correctOption
+        - explanation
+        - selectedOption
+        - isCorrect
+        - orderIndex
+
+    QuizSession:
+      type: object
+      properties:
+        id:
+          type: integer
+        studentId:
+          type: integer
+        subjectId:
+          type: integer
+        subjectName:
+          type: ["string", "null"]
+        grade:
+          type: string
+        status:
+          type: string
+          enum: [in_progress, completed]
+        score:
+          type: ["integer", "null"]
+        totalQuestions:
+          type: integer
+        correctAnswers:
+          type: ["integer", "null"]
+        timeTaken:
+          type: ["integer", "null"]
+        createdAt:
+          type: string
+          format: date-time
+        completedAt:
+          type: ["string", "null"]
+      required:
+        - id
+        - studentId
+        - subjectId
+        - subjectName
+        - grade
+        - status
+        - score
+        - totalQuestions
+        - correctAnswers
+        - timeTaken
+        - createdAt
+        - completedAt
+
+    QuizSessionDetail:
+      type: object
+      properties:
+        session:
+          $ref: "#/components/schemas/QuizSession"
+        questions:
+          type: array
+          items:
+            $ref: "#/components/schemas/SessionQuestion"
+        feedback:
+          oneOf:
+            - $ref: "#/components/schemas/AiFeedback"
+            - type: "null"
+      required:
+        - session
+        - questions
+        - feedback
+
+    AiFeedback:
+      type: object
+      properties:
+        id:
+          type: integer
+        sessionId:
+          type: integer
+        summary:
+          type: ["string", "null"]
+        strengths:
+          type: ["string", "null"]
+        weaknesses:
+          type: ["string", "null"]
+        recommendations:
+          type: ["string", "null"]
+        questionFeedback:
+          type: ["string", "null"]
+        generatedAt:
+          type: ["string", "null"]
+      required:
+        - id
+        - sessionId
+        - summary
+        - strengths
+        - weaknesses
+        - recommendations
+        - questionFeedback
+        - generatedAt
+
+    SubjectPerformance:
+      type: object
+      properties:
+        subjectId:
+          type: integer
+        subjectName:
+          type: string
+        avgScore:
+          type: number
+        totalSessions:
+          type: integer
+      required:
+        - subjectId
+        - subjectName
+        - avgScore
+        - totalSessions
+
+    StudentDashboard:
+      type: object
+      properties:
+        studentId:
+          type: integer
+        totalSessions:
+          type: integer
+        avgScore:
+          type: number
+        highestScore:
+          type: number
+        recentSessions:
+          type: array
+          items:
+            $ref: "#/components/schemas/QuizSession"
+        subjectPerformance:
+          type: array
+          items:
+            $ref: "#/components/schemas/SubjectPerformance"
+        improvementTrend:
+          type: array
+          items:
+            type: number
+      required:
+        - studentId
+        - totalSessions
+        - avgScore
+        - highestScore
+        - recentSessions
+        - subjectPerformance
+        - improvementTrend
+
+    AdminDashboard:
+      type: object
+      properties:
+        totalStudents:
+          type: integer
+        pendingApprovals:
+          type: integer
+        approvedStudents:
+          type: integer
+        totalQuestions:
+          type: integer
+        totalSessions:
+          type: integer
+        avgPlatformScore:
+          type: number
+        recentStudents:
+          type: array
+          items:
+            $ref: "#/components/schemas/Student"
+        subjectBreakdown:
+          type: array
+          items:
+            $ref: "#/components/schemas/SubjectPerformance"
+      required:
+        - totalStudents
+        - pendingApprovals
+        - approvedStudents
+        - totalQuestions
+        - totalSessions
+        - avgPlatformScore
+        - recentStudents
+        - subjectBreakdown
