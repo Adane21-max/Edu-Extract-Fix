@@ -54,7 +54,7 @@ export default function Landing() {
         <div className="flex flex-col sm:flex-row gap-4">
           <Button size="lg" className="bg-primary hover:bg-primary/90 text-white px-8 py-4 text-lg h-auto"
             onClick={() => setLocation("/student/register")}>
-            Start Free Trial <ChevronRight className="ml-2 w-5 h-5" />
+            Register <ChevronRight className="ml-2 w-5 h-5" />
           </Button>
           <Button size="lg" variant="outline" className="border-white/30 text-white hover:bg-white/10 px-8 py-4 text-lg h-auto"
             onClick={() => setLocation("/student/login")}>

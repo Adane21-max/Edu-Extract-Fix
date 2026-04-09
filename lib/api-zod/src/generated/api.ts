@@ -18,18 +18,16 @@ export const HealthCheckResponse = zod.object({
  * @summary Register a new student
  */
 export const RegisterStudentBody = zod.object({
-  name: zod.string(),
-  email: zod.string(),
+  username: zod.string(),
   password: zod.string(),
   grade: zod.string(),
-  telebirrReceipt: zod.string().nullish(),
 });
 
 /**
  * @summary Student login
  */
 export const LoginStudentBody = zod.object({
-  email: zod.string(),
+  username: zod.string(),
   password: zod.string(),
 });
 

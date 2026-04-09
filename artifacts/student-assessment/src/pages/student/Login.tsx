@@ -11,7 +11,7 @@ import { useLoginStudent } from "@workspace/api-client-react";
 export default function StudentLogin() {
   const { login } = useAuth();
   const [, setLocation] = useLocation();
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
@@ -29,7 +29,7 @@ export default function StudentLogin() {
         setLocation("/student/dashboard");
       },
       onError(err) {
-        const msg = (err as { response?: { data?: { error?: string } } }).response?.data?.error ?? "Login failed. Check your email and password.";
+        const msg = (err as { response?: { data?: { error?: string } } }).response?.data?.error ?? "Login failed. Check your username and password.";
         setError(msg);
       },
     },
@@ -38,7 +38,7 @@ export default function StudentLogin() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    mutate({ data: { email, password } });
+    mutate({ data: { username, password } });
   };
 
   return (
@@ -68,14 +68,25 @@ export default function StudentLogin() {
                 </div>
               )}
               <div className="space-y-1.5">
-                <Label htmlFor="email">Email address</Label>
-                <Input id="email" type="email" placeholder="you@example.com" value={email}
-                  onChange={(e) => setEmail(e.target.value)} required />
+                <Label htmlFor="username">Username</Label>
+                <Input
+                  id="username"
+                  placeholder="Your username"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  required
+                />
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="password">Password</Label>
-                <Input id="password" type="password" placeholder="••••••••" value={password}
-                  onChange={(e) => setPassword(e.target.value)} required />
+                <Input
+                  id="password"
+                  type="password"
+                  placeholder="••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
               </div>
               <Button type="submit" className="w-full" disabled={isPending}>
                 {isPending ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Signing in...</> : "Sign In"}

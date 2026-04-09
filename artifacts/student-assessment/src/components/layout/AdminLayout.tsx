@@ -12,6 +12,7 @@ import {
   X,
   DollarSign,
   Megaphone,
+  FlaskConical,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
@@ -24,6 +25,7 @@ const nav = [
   { href: "/admin/questions", icon: BookOpen, label: "Questions" },
   { href: "/admin/grade-prices", icon: DollarSign, label: "Grade Pricing" },
   { href: "/admin/announcements", icon: Megaphone, label: "Announcements" },
+  { href: "/admin/free-trial-questions", icon: FlaskConical, label: "Free Trial Qs" },
 ];
 
 export default function AdminLayout({ children }: { children: ReactNode }) {

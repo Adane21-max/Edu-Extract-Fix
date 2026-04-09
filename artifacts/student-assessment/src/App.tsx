@@ -21,6 +21,7 @@ import AdminQuestionBulk from "@/pages/admin/QuestionBulk";
 import AdminSubjects from "@/pages/admin/Subjects";
 import AdminGradePrices from "@/pages/admin/GradePrices";
 import AdminAnnouncements from "@/pages/admin/Announcements";
+import AdminFreeTrialQuestions from "@/pages/admin/FreeTrialQuestions";
 import { useEffect } from "react";
 
 const queryClient = new QueryClient({
@@ -104,6 +105,9 @@ function Router() {
       </Route>
       <Route path="/admin/announcements">
         <RequireAdmin><AdminAnnouncements /></RequireAdmin>
+      </Route>
+      <Route path="/admin/free-trial-questions">
+        <RequireAdmin><AdminFreeTrialQuestions /></RequireAdmin>
       </Route>
 
       <Route component={NotFound} />

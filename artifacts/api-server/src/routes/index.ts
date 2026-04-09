@@ -9,6 +9,7 @@ import feedbackRouter from "./feedback";
 import dashboardRouter from "./dashboard";
 import gradePricesRouter from "./grade-prices";
 import announcementsRouter from "./announcements";
+import freeTrialRouter from "./free-trial";
 
 const router: IRouter = Router();
 
@@ -22,5 +23,6 @@ router.use(feedbackRouter);
 router.use(dashboardRouter);
 router.use(gradePricesRouter);
 router.use(announcementsRouter);
+router.use(freeTrialRouter);
 
 export default router;

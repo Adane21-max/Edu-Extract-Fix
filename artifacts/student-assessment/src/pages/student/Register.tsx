@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
-import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,11 +12,9 @@ const GRADES = ["6", "7", "8", "9", "10", "11", "12"];
 
 export default function StudentRegister() {
   const [, setLocation] = useLocation();
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [grade, setGrade] = useState("");
-  const [telebirr, setTelebirr] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
 
@@ -36,18 +33,22 @@ export default function StudentRegister() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    mutate({ data: { name, email, password, grade, telebirrReceipt: telebirr || undefined } });
+    if (password.length < 4) { setError("Password must be at least 4 characters."); return; }
+    mutate({ data: { username: username.trim(), password, grade } });
   };
 
   if (success) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-950 to-indigo-900 flex items-center justify-center p-4">
         <Card className="w-full max-w-md border-0 shadow-2xl text-center">
-          <CardContent className="pt-8 pb-8">
-            <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
-            <h2 className="text-2xl font-bold mb-2">Registration Submitted!</h2>
-            <p className="text-muted-foreground mb-6">
-              Your account is pending admin approval. You'll be able to log in once approved.
+          <CardContent className="pt-8 pb-8 space-y-4">
+            <CheckCircle className="w-16 h-16 text-green-500 mx-auto" />
+            <h2 className="text-2xl font-bold">Welcome, {username}!</h2>
+            <p className="text-muted-foreground">
+              Your account has been created. Try the <strong>Free Trial Quiz</strong> first to see how it works — no payment needed!
+            </p>
+            <p className="text-sm text-muted-foreground">
+              When you're ready for full access, log in and complete payment to unlock all quizzes.
             </p>
             <Button onClick={() => setLocation("/student/login")} className="w-full">Go to Login</Button>
           </CardContent>
@@ -84,21 +85,30 @@ export default function StudentRegister() {
               )}
 
               <div className="space-y-1.5">
-                <Label htmlFor="name">Full Name</Label>
-                <Input id="name" placeholder="Abebe Kebede" value={name}
-                  onChange={(e) => setName(e.target.value)} required />
-              </div>
-
-              <div className="space-y-1.5">
-                <Label htmlFor="email">Email Address</Label>
-                <Input id="email" type="email" placeholder="abebe@example.com" value={email}
-                  onChange={(e) => setEmail(e.target.value)} required />
+                <Label htmlFor="username">Username</Label>
+                <Input
+                  id="username"
+                  placeholder="e.g. Abebe2024"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  required
+                  minLength={3}
+                />
               </div>
 
               <div className="space-y-1.5">
                 <Label htmlFor="password">Password</Label>
-                <Input id="password" type="password" placeholder="At least 8 characters" value={password}
-                  onChange={(e) => setPassword(e.target.value)} required minLength={6} />
+                <Input
+                  id="password"
+                  type="password"
+                  placeholder="4 characters minimum"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  minLength={4}
+                  maxLength={20}
+                />
+                <p className="text-xs text-muted-foreground">At least 4 characters</p>
               </div>
 
               <div className="space-y-1.5">
@@ -109,25 +119,13 @@ export default function StudentRegister() {
                   </SelectTrigger>
                   <SelectContent>
                     {GRADES.map((g) => (
-                      <SelectItem key={g} value={g}>
-                        Grade {g}
-                      </SelectItem>
+                      <SelectItem key={g} value={g}>Grade {g}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
 
-              <div className="space-y-1.5">
-                <Label htmlFor="telebirr">TeleBirr Receipt Number</Label>
-                <Input id="telebirr" placeholder="e.g. TBR-2024-XXXXXX" value={telebirr}
-                  onChange={(e) => setTelebirr(e.target.value)} />
-                <p className="text-xs text-muted-foreground">
-                  Pay <span className="font-semibold text-foreground">1000 birr</span> via Telebirr{" "}
-                  <span className="font-semibold text-foreground">0936592186 Adane F</span> and enter your TeleBirr payment receipt number here for faster approval.
-                </p>
-              </div>
-
-              <Button type="submit" className="w-full" disabled={isPending || !grade}>
+              <Button type="submit" className="w-full" disabled={isPending || !grade || !username.trim()}>
                 {isPending ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Creating account...</> : "Create Account"}
               </Button>
             </form>
