@@ -8,6 +8,7 @@ import sessionsRouter from "./sessions";
 import feedbackRouter from "./feedback";
 import dashboardRouter from "./dashboard";
 import gradePricesRouter from "./grade-prices";
+import announcementsRouter from "./announcements";
 
 const router: IRouter = Router();
 
@@ -20,5 +21,6 @@ router.use(sessionsRouter);
 router.use(feedbackRouter);
 router.use(dashboardRouter);
 router.use(gradePricesRouter);
+router.use(announcementsRouter);
 
 export default router;

@@ -38,13 +38,13 @@ export default function Landing() {
       <main className="flex-1 flex flex-col items-center justify-center px-6 py-16 text-center max-w-5xl mx-auto w-full">
         <div className="inline-flex items-center gap-2 bg-white/10 border border-white/20 rounded-full px-4 py-2 text-blue-200 text-sm mb-8">
           <Brain className="w-4 h-4" />
-          AI-Powered Learning for Ethiopian Students
+          Practical Learning for Students
         </div>
 
         <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 leading-tight">
           Master Your
           <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-400"> Grades 6–12</span>
-          <br />Exams with AI
+          <br />Exams with Ada21Tech
         </h1>
 
         <p className="text-xl text-blue-200 mb-10 max-w-2xl">

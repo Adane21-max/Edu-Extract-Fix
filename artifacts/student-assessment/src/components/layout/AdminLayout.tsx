@@ -11,6 +11,7 @@ import {
   Menu,
   X,
   DollarSign,
+  Megaphone,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
@@ -22,6 +23,7 @@ const nav = [
   { href: "/admin/subjects", icon: FolderOpen, label: "Subjects" },
   { href: "/admin/questions", icon: BookOpen, label: "Questions" },
   { href: "/admin/grade-prices", icon: DollarSign, label: "Grade Pricing" },
+  { href: "/admin/announcements", icon: Megaphone, label: "Announcements" },
 ];
 
 export default function AdminLayout({ children }: { children: ReactNode }) {

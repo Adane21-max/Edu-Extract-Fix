@@ -5,14 +5,22 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useLocation } from "wouter";
+import { useQuery } from "@tanstack/react-query";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
-import { Trophy, Target, TrendingUp, BookOpen, Clock, ChevronRight, AlertCircle } from "lucide-react";
+import { Trophy, Target, TrendingUp, BookOpen, Clock, ChevronRight, AlertCircle, Megaphone } from "lucide-react";
+
+interface Announcement {
+  id: number;
+  title: string;
+  content: string;
+  createdAt: string;
+}
 
 export default function StudentDashboard() {
   const { studentId, auth } = useAuth();
   const [, setLocation] = useLocation();
 
-  const { data: dashboard, isLoading } = useGetStudentDashboard(
+  const { data: dashboard } = useGetStudentDashboard(
     studentId ?? 0,
     { query: { enabled: !!studentId } }
   );
@@ -21,6 +29,15 @@ export default function StudentDashboard() {
     { studentId: studentId ?? 0 },
     { query: { enabled: !!studentId } }
   );
+
+  const { data: announcements } = useQuery<Announcement[]>({
+    queryKey: ["announcements"],
+    queryFn: async () => {
+      const r = await fetch("/api/announcements");
+      if (!r.ok) return [];
+      return r.json() as Promise<Announcement[]>;
+    },
+  });
 
   const statusColor = {
     pending: "bg-yellow-100 text-yellow-800",
@@ -52,8 +69,41 @@ export default function StudentDashboard() {
           <div className="flex items-start gap-3 bg-yellow-50 border border-yellow-200 rounded-xl px-4 py-3 text-yellow-800">
             <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
             <div className="text-sm">
-              <strong>Account Pending Approval</strong> — Your account is awaiting admin review. You may not be able to take quizzes until approved.
+              <strong>Account Pending Approval</strong> — Your account is awaiting admin review. You cannot take quizzes until your account is approved. Please ensure you have paid via Telebirr and submitted your receipt during registration.
             </div>
+          </div>
+        )}
+
+        {auth?.user?.status === "suspended" && (
+          <div className="flex items-start gap-3 bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-red-800">
+            <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+            <div className="text-sm">
+              <strong>Account Suspended</strong> — Your account has been suspended. Please contact the administrator for assistance.
+            </div>
+          </div>
+        )}
+
+        {/* Announcements */}
+        {(announcements ?? []).length > 0 && (
+          <div className="space-y-2">
+            <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-2">
+              <Megaphone className="w-4 h-4" /> Announcements
+            </h2>
+            {(announcements ?? []).slice(0, 3).map((a) => (
+              <div
+                key={a.id}
+                className="flex items-start gap-3 bg-blue-50 border border-blue-200 rounded-xl px-4 py-3"
+              >
+                <Megaphone className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" />
+                <div className="min-w-0 flex-1">
+                  <div className="text-sm font-semibold text-blue-900">{a.title}</div>
+                  <p className="text-sm text-blue-800 mt-0.5 whitespace-pre-line">{a.content}</p>
+                  <div className="text-xs text-blue-500 mt-1">
+                    {new Date(a.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         )}
 
@@ -160,7 +210,12 @@ export default function StudentDashboard() {
                     onClick={() => s.status === "completed" ? setLocation(`/student/quiz/${s.id}/review`) : setLocation(`/student/quiz/${s.id}`)}
                   >
                     <div>
-                      <div className="text-sm font-medium">{s.subjectName ?? "Quiz"}</div>
+                      <div className="text-sm font-medium">
+                        {s.subjectName ?? "Quiz"}
+                        {(s as { questionType?: string | null }).questionType
+                          ? ` — ${(s as { questionType?: string | null }).questionType}`
+                          : ""}
+                      </div>
                       <div className="text-xs text-muted-foreground">
                         {new Date(s.createdAt).toLocaleDateString()} • Grade {s.grade} • {s.totalQuestions} questions
                       </div>

@@ -5,7 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useListSubjects, useListSessions } from "@workspace/api-client-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { BookOpen, Loader2, AlertCircle, CheckCircle2, LockKeyhole, PlayCircle, ChevronLeft } from "lucide-react";
+import { BookOpen, Loader2, AlertCircle, CheckCircle2, LockKeyhole, PlayCircle, ChevronLeft, ShieldAlert } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface QuestionTypeInfo {
@@ -18,6 +18,7 @@ export default function QuizStart() {
   const { auth, studentId } = useAuth();
   const [, setLocation] = useLocation();
   const grade = auth?.user?.grade ?? "";
+  const status = auth?.user?.status ?? "pending";
 
   const [selectedSubjectId, setSelectedSubjectId] = useState<number | null>(null);
   const [questionTypes, setQuestionTypes] = useState<QuestionTypeInfo[]>([]);
@@ -93,6 +94,33 @@ export default function QuizStart() {
       setStarting(false);
     }
   };
+
+  if (status !== "approved") {
+    return (
+      <StudentLayout>
+        <div className="max-w-lg mx-auto mt-12">
+          <Card className="border-yellow-300 bg-yellow-50">
+            <CardContent className="py-8 px-6 text-center space-y-4">
+              <ShieldAlert className="w-12 h-12 text-yellow-500 mx-auto" />
+              <div>
+                <h2 className="text-xl font-bold text-yellow-900">
+                  {status === "suspended" ? "Account Suspended" : "Account Not Yet Approved"}
+                </h2>
+                <p className="text-yellow-800 text-sm mt-2">
+                  {status === "suspended"
+                    ? "Your account has been suspended. Please contact the administrator for assistance."
+                    : "Your account is still awaiting admin approval. Once approved, you will be able to take quizzes. Make sure you have paid via Telebirr (0936592186 – Adane F) and entered your receipt number during registration."}
+                </p>
+              </div>
+              <Button variant="outline" className="border-yellow-400 text-yellow-800 hover:bg-yellow-100" onClick={() => setLocation("/student/dashboard")}>
+                Go to Dashboard
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </StudentLayout>
+    );
+  }
 
   return (
     <StudentLayout>
