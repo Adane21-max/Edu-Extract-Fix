@@ -4,5 +4,5 @@ packages:
   - 'lib/integrations/*'
   - 'scripts'
 
-# This tells pnpm it's okay to install common tools
-autoInstallPeers: true
+# We removed the "minimumReleaseAge" and "catalog" sections
+# because they are causing the ERR_PNPM_CATALOG errors.
